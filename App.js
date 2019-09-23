@@ -14,55 +14,86 @@ import {
   View,
   Text,
   StatusBar,
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput,
 } from 'react-native';
 
-import { authorize, refresh, revoke } from 'react-native-app-auth';
+import {authorize, refresh, revoke} from 'react-native-app-auth';
 
 const config = {
-  clientId: '178gkfp1fh5p726e7hqkfrjraj',
+  clientId: '6p7hb5i9ildp1iorss4100hstl',
   redirectUrl: 'surereserve://',
   serviceConfiguration: {
-    authorizationEndpoint: 'https://sure-development.auth.ap-southeast-1.amazoncognito.com/oauth2/authorize',
-    tokenEndpoint: 'https://sure-development.auth.ap-southeast-1.amazoncognito.com/oauth2/token',
-    revocationEndpoint: 'https://sure-development.auth.ap-southeast-1.amazoncognito.com/oauth2/revoke'
+    authorizationEndpoint:
+      'https://sure-development.auth.ap-southeast-1.amazoncognito.com/oauth2/authorize',
+    tokenEndpoint:
+      'https://sure-development.auth.ap-southeast-1.amazoncognito.com/oauth2/token',
+    revocationEndpoint:
+      'https://sure-development.auth.ap-southeast-1.amazoncognito.com/oauth2/revoke',
+  },
+};
+
+import {Header, Colors} from 'react-native/Libraries/NewAppScreen';
+
+import * as awsCognito from './aws-export';
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      input: '',
+    };
   }
-};
 
+  componentDidMount() {
+    const SAMPLE_USERNAME = '00d2ddd8-7ffa-4a96-975f-d1c0a5e8a1e5'; // TODO: get user sub by phone number
+    awsCognito.init(SAMPLE_USERNAME);
+  }
 
-import {
-  Header,
-  Colors,
-} from 'react-native/Libraries/NewAppScreen';
+  render() {
+    return (
+      <Fragment>
+        <StatusBar barStyle="dark-content" />
+        <SafeAreaView>
+          <ScrollView
+            contentInsetAdjustmentBehavior="automatic"
+            style={styles.scrollView}>
+            <Header />
+            {global.HermesInternal == null ? null : (
+              <View style={styles.engine}>
+                <Text style={styles.footer}>Engine: Hermes</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              onPress={async () => {
+                const authState = await authorize(config);
+                console.log(authState);
+                debugger;
+              }}>
+              <View style={styles.btn}>
+                <Text style={styles.btnText}>Social login</Text>
+              </View>
+            </TouchableOpacity>
 
-
-const App = () => {
-  return (
-    <Fragment>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <TouchableOpacity onPress={async () => {
-            const authState = await authorize(config);
-            debugger
-          }}>
-            <View style={{ padding: 12, backgroundColor: 'blue', justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: 'white', textAlign: 'center' }}>Login boy</Text>
-            </View>
-          </TouchableOpacity>
-        </ScrollView>
-      </SafeAreaView>
-    </Fragment>
-  );
-};
+            <TextInput
+              style={{ borderWidth: 1, marginTop: 20, marginBottom: 10, padding: 10, backgroundColor: 'white' }}
+              value={this.state.input}
+              onChangeText={t => this.setState({input: t})}
+            />
+            <TouchableOpacity
+              onPress={async () => {
+                awsCognito.login(this.state.input);
+              }}>
+              <View style={styles.btn}>
+                <Text style={styles.btnText}>Reauth login</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </SafeAreaView>
+      </Fragment>
+    );
+  }
+}
 
 const styles = StyleSheet.create({
   scrollView: {
@@ -72,6 +103,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
   },
+  btn: {
+    padding: 12,
+    backgroundColor: 'blue',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnText: {color: 'white', textAlign: 'center'},
   body: {
     backgroundColor: Colors.white,
   },
